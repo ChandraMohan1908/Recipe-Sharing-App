@@ -1,58 +1,26 @@
+require('dotenv').config();
 const express = require('express');
-const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 const cors = require('cors');
+const router = require('./routes/recipeRoutes')
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 
+const MONGODB_URL = process.env.MONGODB_URL;
+
+// Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-let recipes=[]
+// Connect to MongoDB
+mongoose.connect(MONGODB_URL)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('Could not connect to MongoDB:', err));
 
-app.get('/api/recipes', (req, res) => {
-  res.json(recipes);
-});
+// Routes
+app.use('/api', router);
 
-// Add a new recipe
-app.post('/api/recipes', (req, res) => {
-  const newRecipe = req.body;
-  recipes.push(newRecipe);
-  res.json(newRecipe);
-});
-
-
-// Update a recipe
-app.put('/api/recipes/:id', (req, res) => {
-  const { id } = req.params;
-  const updatedRecipe = req.body;
-
-  // Find the index of the recipe with the given ID
-  const index = recipes.findIndex(recipe => recipe.id === id);
-
-  if (index !== -1) {
-    // Replace the existing recipe with the updated one
-    recipes[index] = updatedRecipe;
-    res.json(updatedRecipe);
-  } else {
-    res.status(404).json({ message: 'Recipe not found' });
-  }
-});
-
-// Delete a recipe
-app.delete('/api/recipes/:id', (req, res) => {
-  const { id } = req.params;
-  const index = recipes.findIndex(recipe => recipe.id === id); // Assuming recipe IDs are strings
-  if (index !== -1) {
-    recipes.splice(index, 1);
-    res.json({ message: 'Recipe deleted successfully' });
-  } else {
-    res.status(404).json({ message: 'Recipe not found' });
-  }
-});
-
-
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
 });
